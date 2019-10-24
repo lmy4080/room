@@ -9,6 +9,7 @@ package com.room;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.room.Room;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -63,24 +64,77 @@ public class MainActivity extends AppCompatActivity {
 
         // Add
         btn_add.setOnClickListener(view -> {
-            db.todoDao().insert(new Todo(et_todo.getText().toString()));
+            new InsertAsyncTask(db.todoDao()).execute(new Todo(et_todo.getText().toString()));
             Log.d("room", "Insert OK.");
             et_todo.setText("");
         });
 
         // Delete
         btn_delete.setOnClickListener(view -> {
-            db.todoDao().delete(Integer.parseInt(et_delete.getText().toString()));
+            new DeleteAsyncTask(db.todoDao()).execute(Long.parseLong(et_delete.getText().toString()));
             Log.d("room", "Delete OK.");
             et_delete.setText("");
         });
 
         // Update
         btn_update.setOnClickListener(view -> {
-            db.todoDao().update(Integer.parseInt(et_update_id.getText().toString()), et_update_content.getText().toString());
+            Todo temp = new Todo(et_update_content.getText().toString());
+            temp.setId(Integer.parseInt(et_update_id.getText().toString()));
+            new UpdateAsyncTask(db.todoDao()).execute(temp);
             Log.d("room", "Update OK.");
             et_update_id.setText("");
             et_update_content.setText("");
         });
+    }
+
+    // Async Add
+    private static class InsertAsyncTask extends AsyncTask<Todo, Void, Void> {
+
+        private TodoDao mTodoDao;
+
+        public InsertAsyncTask(TodoDao todoDao) {
+            mTodoDao = todoDao;
+        }
+
+        @Override
+        protected Void doInBackground(Todo... todos) {
+
+            mTodoDao.insert(todos[0]);
+            return null;
+        }
+    }
+
+    // Async Delete
+    private static class DeleteAsyncTask extends AsyncTask<Long, Void, Void> {
+
+        private TodoDao mTodoDao;
+
+        public DeleteAsyncTask(TodoDao todoDao) {
+            mTodoDao = todoDao;
+        }
+
+        @Override
+        protected Void doInBackground(Long... id) {
+
+            mTodoDao.delete(id[0]);
+            return null;
+        }
+    }
+
+    // Async Update
+    private static class UpdateAsyncTask extends AsyncTask<Todo, String, Void> {
+
+        private TodoDao mTodoDao;
+
+        public UpdateAsyncTask(TodoDao todoDao) {
+            mTodoDao = todoDao;
+        }
+
+        @Override
+        protected Void doInBackground(Todo... todos) {
+
+            mTodoDao.update(todos[0].getId(), todos[0].getTitle());
+            return null;
+        }
     }
 }
