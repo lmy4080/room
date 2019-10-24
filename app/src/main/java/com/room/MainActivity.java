@@ -11,7 +11,6 @@ import androidx.room.Room;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -57,45 +56,31 @@ public class MainActivity extends AppCompatActivity {
                 .allowMainThreadQueries()
                 .build();
 
-        // Retrieve Existing Data
-        showData();
+        // UI 갱신
+        db.todoDao().getAll().observe(this, todos -> {
+            tv_result.setText(todos.toString());
+        });
 
         // Add
-        btn_add.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                db.todoDao().insert(new Todo(et_todo.getText().toString()));
-                showData();
-                Log.d("room", "Insert OK.");
-                et_todo.setText("");
-            }
+        btn_add.setOnClickListener(view -> {
+            db.todoDao().insert(new Todo(et_todo.getText().toString()));
+            Log.d("room", "Insert OK.");
+            et_todo.setText("");
         });
 
         // Delete
-        btn_delete.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                db.todoDao().delete(Integer.parseInt(et_delete.getText().toString()));
-                showData();
-                Log.d("room", "Delete OK.");
-                et_delete.setText("");
-            }
+        btn_delete.setOnClickListener(view -> {
+            db.todoDao().delete(Integer.parseInt(et_delete.getText().toString()));
+            Log.d("room", "Delete OK.");
+            et_delete.setText("");
         });
 
         // Update
-        btn_update.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                db.todoDao().update(Integer.parseInt(et_update_id.getText().toString()), et_update_content.getText().toString());
-                showData();
-                Log.d("room", "Update OK.");
-                et_update_id.setText("");
-                et_update_content.setText("");
-            }
+        btn_update.setOnClickListener(view -> {
+            db.todoDao().update(Integer.parseInt(et_update_id.getText().toString()), et_update_content.getText().toString());
+            Log.d("room", "Update OK.");
+            et_update_id.setText("");
+            et_update_content.setText("");
         });
-    }
-
-    private void showData() {
-        tv_result.setText(db.todoDao().getAll().toString());
     }
 }
