@@ -15,11 +15,13 @@ public class MainViewModel extends AndroidViewModel {
 
     // Room Object
     private AppDatabase db;
+    public LiveData<List<Todo>> todos;
 
     public MainViewModel(@NonNull Application application) {
         super(application);
 
         db = Room.databaseBuilder(application, AppDatabase.class, "todo-db").build();
+        todos = getAll();
     }
 
     public LiveData<List<Todo>> getAll() {
