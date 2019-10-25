@@ -7,6 +7,8 @@ package com.room;
  */
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
 import androidx.room.Room;
 
 import android.os.AsyncTask;
@@ -34,8 +36,6 @@ public class MainActivity extends AppCompatActivity {
     // Result Variable
     private TextView tv_result;
 
-    // Room Object
-    private AppDatabase db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,27 +52,22 @@ public class MainActivity extends AppCompatActivity {
         btn_update = findViewById(R.id.btn_update);
         tv_result = findViewById(R.id.tv_result);
 
-        // Create DB Object
-        db = Room.databaseBuilder(this, AppDatabase.class, "todo-db")
-                .allowMainThreadQueries()
-                .build();
+        MainViewModel viewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
         // UI 갱신
-        db.todoDao().getAll().observe(this, todos -> {
+        viewModel.getAll().observe(this, todos -> {
             tv_result.setText(todos.toString());
         });
 
         // Add
         btn_add.setOnClickListener(view -> {
-            new InsertAsyncTask(db.todoDao()).execute(new Todo(et_todo.getText().toString()));
-            Log.d("room", "Insert OK.");
+            viewModel.insert(new Todo(et_todo.getText().toString()));
             et_todo.setText("");
         });
 
         // Delete
         btn_delete.setOnClickListener(view -> {
-            new DeleteAsyncTask(db.todoDao()).execute(Long.parseLong(et_delete.getText().toString()));
-            Log.d("room", "Delete OK.");
+            viewModel.delete(Long.parseLong(et_delete.getText().toString()));
             et_delete.setText("");
         });
 
@@ -80,61 +75,9 @@ public class MainActivity extends AppCompatActivity {
         btn_update.setOnClickListener(view -> {
             Todo temp = new Todo(et_update_content.getText().toString());
             temp.setId(Integer.parseInt(et_update_id.getText().toString()));
-            new UpdateAsyncTask(db.todoDao()).execute(temp);
-            Log.d("room", "Update OK.");
+            viewModel.update(temp);
             et_update_id.setText("");
             et_update_content.setText("");
         });
-    }
-
-    // Async Add
-    private static class InsertAsyncTask extends AsyncTask<Todo, Void, Void> {
-
-        private TodoDao mTodoDao;
-
-        public InsertAsyncTask(TodoDao todoDao) {
-            mTodoDao = todoDao;
-        }
-
-        @Override
-        protected Void doInBackground(Todo... todos) {
-
-            mTodoDao.insert(todos[0]);
-            return null;
-        }
-    }
-
-    // Async Delete
-    private static class DeleteAsyncTask extends AsyncTask<Long, Void, Void> {
-
-        private TodoDao mTodoDao;
-
-        public DeleteAsyncTask(TodoDao todoDao) {
-            mTodoDao = todoDao;
-        }
-
-        @Override
-        protected Void doInBackground(Long... id) {
-
-            mTodoDao.delete(id[0]);
-            return null;
-        }
-    }
-
-    // Async Update
-    private static class UpdateAsyncTask extends AsyncTask<Todo, String, Void> {
-
-        private TodoDao mTodoDao;
-
-        public UpdateAsyncTask(TodoDao todoDao) {
-            mTodoDao = todoDao;
-        }
-
-        @Override
-        protected Void doInBackground(Todo... todos) {
-
-            mTodoDao.update(todos[0].getId(), todos[0].getTitle());
-            return null;
-        }
     }
 }
